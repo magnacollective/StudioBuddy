@@ -7,6 +7,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
 import subprocess
+import math
+import numpy as np
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
@@ -168,5 +170,107 @@ def _to_wav(input_path: str, workdir: str) -> str:
     if not os.path.exists(output_path):
         raise HTTPException(status_code=400, detail="ffmpeg did not produce output wav")
     return output_path
+
+
+@app.post("/analyze/bpm-key")
+async def analyze_bpm_key(audio: UploadFile = File(...)):
+    """Return BPM and musical key for an uploaded audio file.
+    Uses aubio for tempo estimation and a lightweight chroma+Krumhansl method for key.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        in_path = os.path.join(tmpdir, audio.filename or "audio")
+        with open(in_path, "wb") as f:
+            shutil.copyfileobj(audio.file, f)
+        wav_path = _to_wav(in_path, tmpdir)
+
+        try:
+            from importlib import import_module
+            sf = import_module("soundfile")
+            aubio = import_module("aubio")
+
+            # Read a slice for key analysis (up to 60s)
+            y, sr = sf.read(wav_path, always_2d=False)
+            if y.ndim > 1:
+                y = y.mean(axis=1)
+            max_seconds = 60
+            if len(y) > sr * max_seconds:
+                y = y[: sr * max_seconds]
+
+            bpm = _estimate_bpm_with_aubio(wav_path)
+            key = _estimate_key_chroma(y, sr)
+
+            return {"bpm": bpm, "key": key}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+def _estimate_bpm_with_aubio(wav_path: str) -> float:
+    """Estimate BPM using aubio tempo by beat interval median."""
+    from importlib import import_module
+    aubio = import_module("aubio")
+    samplerate = 0
+    win_s = 1024
+    hop_s = 512
+    s = aubio.source(wav_path, samplerate, hop_s)
+    samplerate = s.samplerate
+    o = aubio.tempo("default", win_s, hop_s, samplerate)
+    beats = []
+    total_frames = 0
+    while True:
+        samples, read = s()
+        is_beat = o(samples)
+        if is_beat:
+            beats.append(o.get_last_s())
+        total_frames += read
+        if read < hop_s:
+            break
+    if len(beats) >= 2:
+        intervals = np.diff(np.array(beats))
+        intervals = intervals[intervals > 1e-3]
+        if len(intervals) > 0:
+            bpm = float(60.0 / np.median(intervals))
+            return max(40.0, min(220.0, bpm))
+    return 120.0
+
+
+def _estimate_key_chroma(y: np.ndarray, sr: int) -> str:
+    """Estimate musical key via simple chroma and Krumhansl profiles."""
+    # STFT
+    n_fft = 4096
+    hop = 2048
+    window = np.hanning(n_fft)
+    chroma = np.zeros(12, dtype=np.float64)
+    for start in range(0, max(0, len(y) - n_fft), hop):
+        frame = y[start : start + n_fft]
+        if frame.shape[0] < n_fft:
+            break
+        spec = np.fft.rfft(frame * window)
+        mag = np.abs(spec)
+        freqs = np.fft.rfftfreq(n_fft, 1.0 / sr)
+        # Map bins to pitch classes
+        for k, f in enumerate(freqs):
+            if f < 27.5:  # below A0 discard
+                continue
+            midi = 69 + 12 * math.log2(f / 440.0)
+            pc = int(round(midi)) % 12
+            chroma[pc] += mag[k]
+    if chroma.sum() == 0:
+        return "Unknown"
+    chroma = chroma / chroma.max()
+    # Krumhansl-Kessler key profiles
+    major_prof = np.array([6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88])
+    minor_prof = np.array([6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17])
+    major_scores = [np.corrcoef(chroma, np.roll(major_prof, i))[0,1] for i in range(12)]
+    minor_scores = [np.corrcoef(chroma, np.roll(minor_prof, i))[0,1] for i in range(12)]
+    maj_idx = int(np.argmax(major_scores))
+    min_idx = int(np.argmax(minor_scores))
+    if max(major_scores) >= max(minor_scores):
+        scale = "major"
+        tonic = maj_idx
+    else:
+        scale = "minor"
+        tonic = min_idx
+    names = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+    return f"{names[tonic]} {scale}"
 
 

@@ -8,4 +8,3 @@ soundfile>=0.12.1
 resampy>=0.4.2
 statsmodels>=0.13.2
 matchering==2.0.6
-aubio==0.4.9

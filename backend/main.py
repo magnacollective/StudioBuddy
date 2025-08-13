@@ -9,6 +9,9 @@ from typing import Dict, Optional
 import subprocess
 import math
 import numpy as np
+import soundfile as sf  # type: ignore
+import resampy  # type: ignore
+from math import log2
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
@@ -174,103 +177,141 @@ def _to_wav(input_path: str, workdir: str) -> str:
 
 @app.post("/analyze/bpm-key")
 async def analyze_bpm_key(audio: UploadFile = File(...)):
-    """Return BPM and musical key for an uploaded audio file.
-    Uses aubio for tempo estimation and a lightweight chroma+Krumhansl method for key.
+    """Analyze uploaded audio and return estimated BPM and musical key.
+    Accepts any audio; converts to WAV via ffmpeg first for robustness.
+    Response: { "bpm": float, "key": str }
     """
+    print(f"[analyze] Received file: {audio.filename}")
     with tempfile.TemporaryDirectory() as tmpdir:
-        in_path = os.path.join(tmpdir, audio.filename or "audio")
-        with open(in_path, "wb") as f:
-            shutil.copyfileobj(audio.file, f)
-        wav_path = _to_wav(in_path, tmpdir)
-
         try:
-            from importlib import import_module
-            sf = import_module("soundfile")
-            aubio = import_module("aubio")
+            # Save upload
+            input_path = os.path.join(tmpdir, audio.filename or "audio")
+            with open(input_path, "wb") as f:
+                shutil.copyfileobj(audio.file, f)
 
-            # Read a slice for key analysis (up to 60s)
-            y, sr = sf.read(wav_path, always_2d=False)
-            if y.ndim > 1:
+            # Convert to WAV
+            wav_path = _to_wav(input_path, tmpdir)
+            print(f"[analyze] Converted to wav: {wav_path}")
+
+            # Load samples
+            y, sr = sf.read(wav_path, dtype="float32", always_2d=False)
+            if y.ndim == 2:
                 y = y.mean(axis=1)
-            max_seconds = 60
-            if len(y) > sr * max_seconds:
-                y = y[: sr * max_seconds]
+            # Resample to a stable rate for analysis
+            target_sr = 22050
+            if sr != target_sr:
+                y = resampy.resample(y, sr, target_sr)
+                sr = target_sr
+            print(f"[analyze] Samples: {len(y)}, sr: {sr}")
 
-            bpm = _estimate_bpm_with_aubio(wav_path)
-            key = _estimate_key_chroma(y, sr)
+            bpm = _estimate_bpm(y, sr)
+            key = _estimate_key(y, sr)
+            print(f"[analyze] Estimated BPM: {bpm}, Key: {key}")
 
-            return {"bpm": bpm, "key": key}
+            return JSONResponse({"bpm": float(round(bpm, 1)), "key": key})
+        except HTTPException:
+            raise
         except Exception as e:
+            print(f"[analyze] Error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
-def _estimate_bpm_with_aubio(wav_path: str) -> float:
-    """Estimate BPM using aubio tempo by beat interval median."""
-    from importlib import import_module
-    aubio = import_module("aubio")
-    samplerate = 0
-    win_s = 1024
-    hop_s = 512
-    s = aubio.source(wav_path, samplerate, hop_s)
-    samplerate = s.samplerate
-    o = aubio.tempo("default", win_s, hop_s, samplerate)
-    beats = []
-    total_frames = 0
-    while True:
-        samples, read = s()
-        is_beat = o(samples)
-        if is_beat:
-            beats.append(o.get_last_s())
-        total_frames += read
-        if read < hop_s:
-            break
-    if len(beats) >= 2:
-        intervals = np.diff(np.array(beats))
-        intervals = intervals[intervals > 1e-3]
-        if len(intervals) > 0:
-            bpm = float(60.0 / np.median(intervals))
-            return max(40.0, min(220.0, bpm))
-    return 120.0
+def _stft_mag(y: np.ndarray, sr: int, n_fft: int = 2048, hop_length: int = 512) -> np.ndarray:
+    # Hann window STFT
+    window = np.hanning(n_fft).astype(np.float32)
+    num_frames = 1 + max(0, (len(y) - n_fft) // hop_length)
+    if num_frames <= 0:
+        return np.empty((n_fft // 2 + 1, 0), dtype=np.float32)
+    S = np.empty((n_fft // 2 + 1, num_frames), dtype=np.float32)
+    for i in range(num_frames):
+        start = i * hop_length
+        frame = y[start:start + n_fft]
+        if len(frame) < n_fft:
+            pad = np.zeros(n_fft - len(frame), dtype=np.float32)
+            frame = np.concatenate([frame, pad])
+        frame = frame * window
+        spec = np.fft.rfft(frame, n=n_fft)
+        S[:, i] = np.abs(spec)
+    return S
 
 
-def _estimate_key_chroma(y: np.ndarray, sr: int) -> str:
-    """Estimate musical key via simple chroma and Krumhansl profiles."""
-    # STFT
+def _estimate_bpm(y: np.ndarray, sr: int) -> float:
+    n_fft = 2048
+    hop = 512
+    S = _stft_mag(y, sr, n_fft=n_fft, hop_length=hop)
+    if S.shape[1] < 4:
+        return 120.0
+    # Spectral flux onset envelope
+    flux = np.maximum(0.0, np.diff(S, axis=1))
+    onset_env = flux.sum(axis=0)
+    # Normalize
+    if onset_env.max() > 0:
+        onset_env = onset_env / onset_env.max()
+    onset_env = onset_env - onset_env.mean()
+    # Autocorrelation
+    acf = np.correlate(onset_env, onset_env, mode='full')[onset_env.size - 1:]
+    # Map BPM range to lags (in frames)
+    min_bpm, max_bpm = 60.0, 200.0
+    min_lag = int(round(sr * 60.0 / (max_bpm * hop)))
+    max_lag = int(round(sr * 60.0 / (min_bpm * hop)))
+    if max_lag <= min_lag or max_lag >= acf.size:
+        return 120.0
+    search = acf[min_lag:max_lag]
+    best_idx = int(np.argmax(search)) + min_lag
+    bpm = 60.0 * sr / (best_idx * hop)
+    # Consider octave errors (x2, /2)
+    candidates = [bpm / 2, bpm, bpm * 2]
+    candidates = [c for c in candidates if 60 <= c <= 200]
+    if not candidates:
+        return float(bpm)
+    # Prefer the one whose lag peak is strongest
+    def lag_for(b: float) -> int:
+        return int(round(sr * 60.0 / (b * hop)))
+    strengths = [acf[lag_for(c)] if lag_for(c) < acf.size else -np.inf for c in candidates]
+    return float(candidates[int(np.argmax(strengths))])
+
+
+def _estimate_key(y: np.ndarray, sr: int) -> str:
     n_fft = 4096
-    hop = 2048
-    window = np.hanning(n_fft)
-    chroma = np.zeros(12, dtype=np.float64)
-    for start in range(0, max(0, len(y) - n_fft), hop):
-        frame = y[start : start + n_fft]
-        if frame.shape[0] < n_fft:
-            break
-        spec = np.fft.rfft(frame * window)
-        mag = np.abs(spec)
-        freqs = np.fft.rfftfreq(n_fft, 1.0 / sr)
-        # Map bins to pitch classes
-        for k, f in enumerate(freqs):
-            if f < 27.5:  # below A0 discard
-                continue
-            midi = 69 + 12 * math.log2(f / 440.0)
-            pc = int(round(midi)) % 12
-            chroma[pc] += mag[k]
-    if chroma.sum() == 0:
-        return "Unknown"
-    chroma = chroma / chroma.max()
-    # Krumhansl-Kessler key profiles
-    major_prof = np.array([6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88])
-    minor_prof = np.array([6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17])
-    major_scores = [np.corrcoef(chroma, np.roll(major_prof, i))[0,1] for i in range(12)]
-    minor_scores = [np.corrcoef(chroma, np.roll(minor_prof, i))[0,1] for i in range(12)]
-    maj_idx = int(np.argmax(major_scores))
-    min_idx = int(np.argmax(minor_scores))
-    if max(major_scores) >= max(minor_scores):
-        scale = "major"
-        tonic = maj_idx
-    else:
-        scale = "minor"
-        tonic = min_idx
-    names = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
-    return f"{names[tonic]} {scale}"
+    hop = n_fft // 2
+    S = _stft_mag(y, sr, n_fft=n_fft, hop_length=hop)
+    if S.shape[1] == 0:
+        return "C Major"
+    # Map frequency bins to pitch classes (12-TET)
+    freqs = np.linspace(0, sr / 2, S.shape[0], dtype=np.float32)
+    chroma = np.zeros(12, dtype=np.float32)
+    for b, f in enumerate(freqs):
+        if f < 80 or f > 2000:
+            continue
+        # MIDI note number
+        midi = 69 + 12 * log2(max(f, 1e-6) / 440.0)
+        pc = int(round(midi)) % 12
+        chroma[pc] += S[b, :].mean()
+    # Normalize
+    if chroma.sum() > 0:
+        chroma = chroma / chroma.sum()
+    # Krumhansl-Schmuckler profiles
+    major = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88], dtype=np.float32)
+    minor = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17], dtype=np.float32)
+    keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    def corr(a, b):
+        a = (a - a.mean())
+        b = (b - b.mean())
+        den = (np.linalg.norm(a) * np.linalg.norm(b))
+        return float((a @ b) / den) if den > 0 else -1
+    best_name = "C Major"
+    best_score = -1.0
+    for i in range(12):
+        maj = np.roll(major, i)
+        minr = np.roll(minor, i)
+        smaj = corr(chroma, maj)
+        smin = corr(chroma, minr)
+        if smaj > best_score:
+            best_score = smaj
+            best_name = f"{keys[i]} Major"
+        if smin > best_score:
+            best_score = smin
+            best_name = f"{keys[i]} Minor"
+    return best_name
 
 

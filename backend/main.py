@@ -11,11 +11,11 @@ import subprocess
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
-# Add CORS middleware
+# Add CORS middleware - allow all origins temporarily for debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://studio-buddy-web.vercel.app"],
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporarily allow all origins
+    allow_credentials=False,  # Must be False when allow_origins=["*"]
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -81,7 +81,10 @@ async def master_audio(
                 filename="mastered.wav",
             )
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            print(f"[ERROR] Mastering failed: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Mastering error: {str(e)}")
 
 
 def _run_matchering_job(tmpdir: str, target_path: str, reference_path: str, output_path: str, job_id: str) -> None:

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query
 from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import os
 import shutil
@@ -14,6 +15,15 @@ import resampy  # type: ignore
 from math import log2
 
 app = FastAPI(title="StudioBuddy Matchering API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://studio-buddy-web.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
@@ -32,27 +42,33 @@ def health() -> str:
 
 @app.post("/master")
 async def master_audio(
-    target: UploadFile = File(...),
-    reference: UploadFile = File(...),
+    audio: UploadFile = File(...),
+    reference: UploadFile = File(None),
 ):
     # Create a temp working directory
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             # Lazy import to speed up cold start
             import matchering as mg  # type: ignore
-            target_upload = os.path.join(tmpdir, target.filename or "target")
-            reference_upload = os.path.join(tmpdir, reference.filename or "reference")
+            target_upload = os.path.join(tmpdir, audio.filename or "target")
             output_path = os.path.join(tmpdir, "mastered.wav")
 
-            # Save uploads to disk
+            # Save audio file to disk
             with open(target_upload, "wb") as f:
-                shutil.copyfileobj(target.file, f)
-            with open(reference_upload, "wb") as f:
-                shutil.copyfileobj(reference.file, f)
+                shutil.copyfileobj(audio.file, f)
 
             # Pre-convert to WAV with ffmpeg to handle odd headers/corruption
             t_wav = _to_wav(target_upload, tmpdir)
-            r_wav = _to_wav(reference_upload, tmpdir)
+            
+            # Handle reference file
+            if reference and reference.filename:
+                reference_upload = os.path.join(tmpdir, reference.filename or "reference")
+                with open(reference_upload, "wb") as f:
+                    shutil.copyfileobj(reference.file, f)
+                r_wav = _to_wav(reference_upload, tmpdir)
+            else:
+                # Use the audio file as both target and reference for auto-mastering
+                r_wav = t_wav
 
             # Process via Matchering
             from importlib import import_module  # late import

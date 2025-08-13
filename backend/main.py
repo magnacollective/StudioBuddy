@@ -3,7 +3,6 @@ from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 import tempfile
 import os
 import shutil
-import matchering as mg
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
@@ -33,6 +32,8 @@ async def master_audio(
     # Create a temp working directory
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
+            # Lazy import to speed up cold start
+            import matchering as mg  # type: ignore
             target_path = os.path.join(tmpdir, target.filename or "target")
             reference_path = os.path.join(tmpdir, reference.filename or "reference")
             output_path = os.path.join(tmpdir, "mastered.wav")
@@ -60,15 +61,13 @@ async def master_audio(
                 media_type="audio/wav",
                 filename="mastered.wav",
             )
-        except mg.log.ModuleError as e:  # type: ignore[attr-defined]
-            # Matchering provides detailed errors
-            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
 
 def _run_matchering_job(tmpdir: str, target_path: str, reference_path: str, output_path: str, job_id: str) -> None:
     try:
+        import matchering as mg  # type: ignore
         JOBS[job_id]["status"] = "running"
         mg.log(print)
         mg.process(
@@ -82,9 +81,6 @@ def _run_matchering_job(tmpdir: str, target_path: str, reference_path: str, outp
         else:
             JOBS[job_id]["status"] = "error"
             JOBS[job_id]["message"] = "Output not created"
-    except mg.log.ModuleError as e:  # type: ignore[attr-defined]
-        JOBS[job_id]["status"] = "error"
-        JOBS[job_id]["message"] = str(e)
     except Exception as e:
         JOBS[job_id]["status"] = "error"
         JOBS[job_id]["message"] = str(e)

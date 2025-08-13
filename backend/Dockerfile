@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY backend/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Separate heavy deps to optimize layer caching
+RUN pip install --no-cache-dir numpy>=1.23.4 scipy>=1.9.2 soundfile>=0.12.1 resampy>=0.4.2 statsmodels>=0.13.2 && \
+    pip install --no-cache-dir -r /app/requirements.txt
 
 COPY backend /app
 

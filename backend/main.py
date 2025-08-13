@@ -136,8 +136,11 @@ def master_result(id: str = Query(..., alias="id")):
 # Utilities
 def _to_wav(input_path: str, workdir: str) -> str:
     """Convert any input audio to 44.1kHz 16-bit stereo WAV using ffmpeg, with tolerant flags."""
-    base = os.path.splitext(os.path.basename(input_path))[0]
+    base, ext = os.path.splitext(os.path.basename(input_path))
     output_path = os.path.join(workdir, f"{base}.wav")
+    # If input is already a .wav at the same path, write to a different filename
+    if ext.lower() in {".wav", ".wave"} and os.path.abspath(input_path) == os.path.abspath(output_path):
+        output_path = os.path.join(workdir, f"{base}.converted.wav")
     cmd = [
         "ffmpeg",
         "-hide_banner",

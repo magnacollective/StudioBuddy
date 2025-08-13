@@ -6,6 +6,7 @@ import shutil
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
+import subprocess
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
@@ -34,23 +35,25 @@ async def master_audio(
         try:
             # Lazy import to speed up cold start
             import matchering as mg  # type: ignore
-            target_path = os.path.join(tmpdir, target.filename or "target")
-            reference_path = os.path.join(tmpdir, reference.filename or "reference")
+            target_upload = os.path.join(tmpdir, target.filename or "target")
+            reference_upload = os.path.join(tmpdir, reference.filename or "reference")
             output_path = os.path.join(tmpdir, "mastered.wav")
 
             # Save uploads to disk
-            with open(target_path, "wb") as f:
+            with open(target_upload, "wb") as f:
                 shutil.copyfileobj(target.file, f)
-            with open(reference_path, "wb") as f:
+            with open(reference_upload, "wb") as f:
                 shutil.copyfileobj(reference.file, f)
 
+            # Pre-convert to WAV with ffmpeg to handle odd headers/corruption
+            t_wav = _to_wav(target_upload, tmpdir)
+            r_wav = _to_wav(reference_upload, tmpdir)
+
             # Process via Matchering
+            from importlib import import_module  # late import
+            mg = import_module("matchering")
             mg.log(print)
-            mg.process(
-                target=target_path,
-                reference=reference_path,
-                results=[mg.pcm16(output_path)],
-            )
+            mg.process(target=t_wav, reference=r_wav, results=[mg.pcm16(output_path)])
 
             if not os.path.exists(output_path):
                 raise HTTPException(status_code=500, detail="Mastering failed: output not created")
@@ -67,14 +70,14 @@ async def master_audio(
 
 def _run_matchering_job(tmpdir: str, target_path: str, reference_path: str, output_path: str, job_id: str) -> None:
     try:
-        import matchering as mg  # type: ignore
+        from importlib import import_module
+        mg = import_module("matchering")
         JOBS[job_id]["status"] = "running"
         mg.log(print)
-        mg.process(
-            target=target_path,
-            reference=reference_path,
-            results=[mg.pcm16(output_path)],
-        )
+        # Pre-convert to WAV with ffmpeg first
+        t_wav = _to_wav(target_path, tmpdir)
+        r_wav = _to_wav(reference_path, tmpdir)
+        mg.process(target=t_wav, reference=r_wav, results=[mg.pcm16(output_path)])
         if os.path.exists(output_path):
             JOBS[job_id]["status"] = "done"
             JOBS[job_id]["output_path"] = output_path
@@ -128,5 +131,39 @@ def master_result(id: str = Query(..., alias="id")):
     if job.get("status") != "done" or not job.get("output_path"):
         raise HTTPException(status_code=400, detail="Job not completed")
     return FileResponse(job["output_path"], media_type="audio/wav", filename="mastered.wav")
+
+
+# Utilities
+def _to_wav(input_path: str, workdir: str) -> str:
+    """Convert any input audio to 44.1kHz 16-bit stereo WAV using ffmpeg, with tolerant flags."""
+    base = os.path.splitext(os.path.basename(input_path))[0]
+    output_path = os.path.join(workdir, f"{base}.wav")
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-loglevel",
+        "warning",
+        "-err_detect",
+        "ignore_err",
+        "-i",
+        input_path,
+        "-vn",
+        "-ac",
+        "2",
+        "-ar",
+        "44100",
+        "-c:a",
+        "pcm_s16le",
+        output_path,
+    ]
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=400, detail=f"ffmpeg failed to convert input: {e}")
+    if not os.path.exists(output_path):
+        raise HTTPException(status_code=400, detail="ffmpeg did not produce output wav")
+    return output_path
 
 

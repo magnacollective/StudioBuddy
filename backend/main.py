@@ -113,7 +113,11 @@ def master_status(id: str = Query(..., alias="id")):
     job = JOBS.get(id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    return {"status": job.get("status"), "message": job.get("message")}
+    return {
+        "status": job.get("status"),
+        "message": job.get("message"),
+        "has_output": os.path.exists(job.get("output_path") or "") if job.get("output_path") else False,
+    }
 
 
 @app.get("/master/result")

@@ -197,6 +197,17 @@ async def analyze_bpm_key(audio: UploadFile = File(...)):
     Accepts any audio; converts to WAV via ffmpeg first for robustness.
     Response: { "bpm": float, "key": str }
     """
+    return await _analyze_audio_internal(audio)
+
+@app.post("/analyze")
+async def analyze_audio(audio: UploadFile = File(...)):
+    """Analyze uploaded audio and return estimated BPM and musical key.
+    Accepts any audio; converts to WAV via ffmpeg first for robustness.
+    Response: { "bpm": float, "key": str }
+    """
+    return await _analyze_audio_internal(audio)
+
+async def _analyze_audio_internal(audio: UploadFile):
     print(f"[analyze] Received file: {audio.filename}")
     with tempfile.TemporaryDirectory() as tmpdir:
         try:

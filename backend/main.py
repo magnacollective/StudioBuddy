@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import tempfile
 import os
 import shutil
@@ -49,9 +50,44 @@ async def cors_handler(request: Request, call_next):
     
     return response
 
+# Custom exception handler to ensure CORS headers are always present
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Custom exception handler that ensures CORS headers are always included"""
+    headers = {
+        "Access-Control-Allow-Origin": "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS),
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Expose-Headers": "*",
+    }
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=headers
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle all other exceptions with CORS headers"""
+    print(f"[ERROR] Unhandled exception: {exc}")
+    import traceback
+    traceback.print_exc()
+    
+    headers = {
+        "Access-Control-Allow-Origin": "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS),
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Expose-Headers": "*",
+    }
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"},
+        headers=headers
+    )
+
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.2", "cors": "fixed-ffmpeg", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:45"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.3", "cors": "exception-handlers", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-19:00"}
 
 @app.get("/test")
 def test():
@@ -79,10 +115,12 @@ def health() -> str:
 
 @app.post("/master")
 async def master_audio(
+    request: Request,
     audio: UploadFile = File(...),
     reference: UploadFile = File(None),
 ):
     print(f"[MASTER] Received request: audio={audio.filename}, reference={reference.filename if reference else None}")
+    print(f"[MASTER] Request headers: {dict(request.headers)}")
     
     # Create a temp working directory
     with tempfile.TemporaryDirectory() as tmpdir:

@@ -51,7 +51,7 @@ async def cors_handler(request: Request, call_next):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.0", "cors": "env-origins", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:15"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.1", "cors": "debug-mode", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:30"}
 
 @app.get("/test")
 def test():
@@ -60,6 +60,11 @@ def test():
 @app.post("/test-post")
 async def test_post(audio: UploadFile = File(...)):
     return {"message": "POST request successful", "filename": audio.filename, "size": audio.size}
+
+@app.post("/test-cors")
+async def test_cors():
+    """Simple POST endpoint to test CORS without file upload"""
+    return {"message": "CORS POST test successful", "timestamp": "2024-08-14"}
 
 
 # Simple in-memory job store (prototype)
@@ -77,11 +82,15 @@ async def master_audio(
     audio: UploadFile = File(...),
     reference: UploadFile = File(None),
 ):
+    print(f"[MASTER] Received request: audio={audio.filename}, reference={reference.filename if reference else None}")
+    
     # Create a temp working directory
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
+            print("[MASTER] Importing matchering library...")
             # Lazy import to speed up cold start
             import matchering as mg  # type: ignore
+            print("[MASTER] Matchering import successful")
             target_upload = os.path.join(tmpdir, audio.filename or "target")
             output_path = os.path.join(tmpdir, "mastered.wav")
 

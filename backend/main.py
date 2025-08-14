@@ -134,12 +134,16 @@ async def master_audio(
             if not audio.filename:
                 raise HTTPException(status_code=400, detail="No filename provided")
             
-            # Check file size before processing
+            # Check file size before processing - increased limits for better compatibility
             if hasattr(audio, 'size') and audio.size:
-                if audio.size > 100 * 1024 * 1024:  # 100MB limit
-                    raise HTTPException(status_code=400, detail="File too large. Maximum size is 100MB")
+                if audio.size > 200 * 1024 * 1024:  # 200MB limit (increased from 100MB)
+                    raise HTTPException(status_code=400, detail="File too large. Maximum size is 200MB")
                 if audio.size < 1024:  # 1KB minimum
                     raise HTTPException(status_code=400, detail="File too small. Minimum size is 1KB")
+                
+                # Log file size for monitoring
+                size_mb = audio.size / (1024 * 1024)
+                print(f"[MASTER] Processing file size: {size_mb:.1f}MB")
             
             # Check file extension
             allowed_extensions = ['.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aac', '.wma']

@@ -22,7 +22,11 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "2.0"}
+
+@app.get("/test")
+def test():
+    return {"message": "Mastering API is working!", "timestamp": "2024-08-14"}
 
 
 # Simple in-memory job store (prototype)
@@ -189,8 +193,38 @@ def _to_wav(input_path: str, workdir: str) -> str:
     return output_path
 
 
-# Mastering API only - analysis endpoints removed
-# BPM/Key analysis should be handled by separate Railway service at:
-# https://song-key-bpm-finder-app-production.up.railway.app
+@app.post("/analyze")
+async def analyze_audio(audio: UploadFile = File(...)):
+    """Analyze uploaded audio file for BPM and key detection.
+    Returns: {"bpm": float, "key": string, "duration": float, "sample_rate": int}
+    """
+    print(f"[analyze] Received file: {audio.filename}")
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            # Save uploaded file
+            input_path = os.path.join(tmpdir, audio.filename or "audio")
+            with open(input_path, "wb") as f:
+                shutil.copyfileobj(audio.file, f)
+            
+            # Convert to WAV using existing function
+            wav_path = _to_wav(input_path, tmpdir)
+            print(f"[analyze] Converted to WAV: {wav_path}")
+            
+            # For now, return mock data
+            # TODO: Integrate actual BPM/key analysis library
+            analysis_result = {
+                "bpm": 128.0,
+                "key": "A Minor", 
+                "duration": "3:24",
+                "sample_rate": "44.1 kHz"
+            }
+            
+            print(f"[analyze] Mock analysis complete: {analysis_result}")
+            return analysis_result
+            
+        except Exception as e:
+            print(f"[analyze] Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 

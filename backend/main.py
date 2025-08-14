@@ -51,7 +51,7 @@ async def cors_handler(request: Request, call_next):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.1", "cors": "debug-mode", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:30"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.2", "cors": "fixed-ffmpeg", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:45"}
 
 @app.get("/test")
 def test():
@@ -91,12 +91,34 @@ async def master_audio(
             # Lazy import to speed up cold start
             import matchering as mg  # type: ignore
             print("[MASTER] Matchering import successful")
+            
+            # Validate file
+            if not audio.filename:
+                raise HTTPException(status_code=400, detail="No filename provided")
+            
+            # Check file size before processing
+            if hasattr(audio, 'size') and audio.size:
+                if audio.size > 100 * 1024 * 1024:  # 100MB limit
+                    raise HTTPException(status_code=400, detail="File too large. Maximum size is 100MB")
+                if audio.size < 1024:  # 1KB minimum
+                    raise HTTPException(status_code=400, detail="File too small. Minimum size is 1KB")
+            
+            # Check file extension
+            allowed_extensions = ['.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aac', '.wma']
+            file_ext = os.path.splitext(audio.filename.lower())[1]
+            if file_ext not in allowed_extensions:
+                raise HTTPException(status_code=400, detail=f"Unsupported file format {file_ext}. Supported: {', '.join(allowed_extensions)}")
+            
             target_upload = os.path.join(tmpdir, audio.filename or "target")
             output_path = os.path.join(tmpdir, "mastered.wav")
 
+            print(f"[MASTER] Saving uploaded file: {audio.filename}")
             # Save audio file to disk
             with open(target_upload, "wb") as f:
                 shutil.copyfileobj(audio.file, f)
+            
+            saved_size = os.path.getsize(target_upload)
+            print(f"[MASTER] Saved file size: {saved_size} bytes")
 
             # Pre-convert to WAV with ffmpeg to handle odd headers/corruption
             t_wav = _to_wav(target_upload, tmpdir)
@@ -201,37 +223,93 @@ def master_result(id: str = Query(..., alias="id")):
 # Utilities
 def _to_wav(input_path: str, workdir: str) -> str:
     """Convert any input audio to 44.1kHz 16-bit stereo WAV using ffmpeg, with tolerant flags."""
+    print(f"[_to_wav] Converting {input_path}")
+    
+    # Validate input file exists and has content
+    if not os.path.exists(input_path):
+        raise HTTPException(status_code=400, detail=f"Input file does not exist: {input_path}")
+    
+    file_size = os.path.getsize(input_path)
+    print(f"[_to_wav] Input file size: {file_size} bytes")
+    
+    if file_size == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    
+    if file_size < 1024:  # Less than 1KB is probably not a valid audio file
+        raise HTTPException(status_code=400, detail="Uploaded file is too small to be a valid audio file")
+    
     base, ext = os.path.splitext(os.path.basename(input_path))
     output_path = os.path.join(workdir, f"{base}.wav")
+    
     # If input is already a .wav at the same path, write to a different filename
     if ext.lower() in {".wav", ".wave"} and os.path.abspath(input_path) == os.path.abspath(output_path):
         output_path = os.path.join(workdir, f"{base}.converted.wav")
+    
+    # First, probe the file to check if it's valid audio
+    probe_cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-i", input_path,
+        "-f", "null",
+        "-"
+    ]
+    
+    try:
+        print(f"[_to_wav] Probing audio file...")
+        result = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            print(f"[_to_wav] Probe failed: {result.stderr}")
+            raise HTTPException(status_code=400, detail=f"Invalid audio file format or corrupted file. Error: {result.stderr[-200:]}")
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=400, detail="Audio file validation timed out - file may be corrupted")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to validate audio file: {str(e)}")
+    
+    # Now convert to WAV
     cmd = [
         "ffmpeg",
         "-hide_banner",
         "-nostdin",
         "-y",
         "-loglevel",
-        "warning",
+        "error",  # Only show errors
         "-err_detect",
         "ignore_err",
         "-i",
         input_path,
-        "-vn",
+        "-vn",  # No video
         "-ac",
-        "2",
+        "2",    # Stereo
         "-ar",
-        "44100",
+        "44100", # 44.1kHz
         "-c:a",
-        "pcm_s16le",
+        "pcm_s16le",  # 16-bit PCM
+        "-f", "wav",  # Force WAV format
         output_path,
     ]
+    
+    print(f"[_to_wav] Converting with command: {' '.join(cmd)}")
+    
     try:
-        subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=400, detail=f"ffmpeg failed to convert input: {e}")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            print(f"[_to_wav] Conversion failed: {result.stderr}")
+            raise HTTPException(status_code=400, detail=f"Audio conversion failed: {result.stderr[-200:]}")
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=400, detail="Audio conversion timed out - file may be too large or corrupted")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Conversion error: {str(e)}")
+    
     if not os.path.exists(output_path):
-        raise HTTPException(status_code=400, detail="ffmpeg did not produce output wav")
+        raise HTTPException(status_code=400, detail="Audio conversion completed but output file was not created")
+    
+    output_size = os.path.getsize(output_path)
+    print(f"[_to_wav] Conversion successful, output size: {output_size} bytes")
+    
+    if output_size == 0:
+        raise HTTPException(status_code=400, detail="Audio conversion produced empty file")
+    
     return output_path
 
 

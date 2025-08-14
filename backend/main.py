@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query
+from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
@@ -11,21 +11,24 @@ import subprocess
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
-# Add CORS middleware - allow all origins temporarily for debugging
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins
-    allow_credentials=False,  # Must be False when allow_origins=["*"]
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+# Manual CORS middleware to ensure it always works
+@app.middleware("http")
+async def cors_handler(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Add CORS headers to every response
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Expose-Headers"] = "*"
+    
+    return response
 
-# Additional CORS handling for preflight requests
+# Handle preflight OPTIONS requests
 @app.options("/{full_path:path}")
 async def preflight_handler(full_path: str):
-    return JSONResponse(
-        content="OK",
+    return Response(
+        status_code=200,
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -40,6 +43,10 @@ def root():
 @app.get("/test")
 def test():
     return {"message": "Mastering API is working!", "timestamp": "2024-08-14"}
+
+@app.post("/test-post")
+async def test_post(audio: UploadFile = File(...)):
+    return {"message": "POST request successful", "filename": audio.filename, "size": audio.size}
 
 
 # Simple in-memory job store (prototype)
@@ -91,14 +98,12 @@ async def master_audio(
             if not os.path.exists(output_path):
                 raise HTTPException(status_code=500, detail="Mastering failed: output not created")
 
-            # Return file with CORS headers
-            response = FileResponse(
+            # Return file (CORS headers added by middleware)
+            return FileResponse(
                 output_path,
                 media_type="audio/wav",
                 filename="mastered.wav",
             )
-            response.headers["Access-Control-Allow-Origin"] = "*"
-            return response
         except Exception as e:
             print(f"[ERROR] Mastering failed: {e}")
             import traceback

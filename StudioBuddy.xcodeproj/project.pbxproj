@@ -1,0 +1,615 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8B1A1A1A1A1A1A1A1A1A1A1A /* StudioBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1A1A1A1A1A1A1A1A1A1A19 /* StudioBuddyApp.swift */; };
+		8B1A1A1A1A1A1A1A1A1A1A1B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1A1A1A1A1A1A1A1A1A1A1C /* ContentView.swift */; };
+		8B1A1A1A1A1A1A1A1A1A1A1D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B1A1A1A1A1A1A1A1A1A1A1E /* Assets.xcassets */; };
+		8B1A1A1A1A1A1A1A1A1A1A20 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1A1A1A1A1A1A1A1A1A1A1F /* AudioManager.swift */; };
+		F701DDAC2E4C54D10072EC92 /* Win95Desktop.swift in Sources */ = {isa = PBXBuildFile; fileRef = F701DDAA2E4C54D10072EC92 /* Win95Desktop.swift */; };
+		F701DDAD2E4C54D10072EC92 /* Win95Windows.swift in Sources */ = {isa = PBXBuildFile; fileRef = F701DDAB2E4C54D10072EC92 /* Win95Windows.swift */; };
+		F7657CBD2E4D521100FB2704 /* SongKeyBpmAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7657CBC2E4D521100FB2704 /* SongKeyBpmAPI.swift */; };
+		F7AA00022E4C5AAA0072EC92 /* AudioAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7AA00012E4C5AAA0072EC92 /* AudioAnalyzer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		8B1A1A1A1A1A1A1A1A1A1A16 /* StudioBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StudioBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B1A1A1A1A1A1A1A1A1A1A19 /* StudioBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioBuddyApp.swift; sourceTree = "<group>"; };
+		8B1A1A1A1A1A1A1A1A1A1A1C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		8B1A1A1A1A1A1A1A1A1A1A1E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8B1A1A1A1A1A1A1A1A1A1A1F /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		8B1A1A1A1A1A1A1A1A1A1A21 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F701DDAA2E4C54D10072EC92 /* Win95Desktop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Win95Desktop.swift; sourceTree = "<group>"; };
+		F701DDAB2E4C54D10072EC92 /* Win95Windows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Win95Windows.swift; sourceTree = "<group>"; };
+		F7657C762E4D02D700FB2704 /* audio_unit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = audio_unit.h; sourceTree = "<group>"; };
+		F7657C772E4D02D700FB2704 /* ioutils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ioutils.h; sourceTree = "<group>"; };
+		F7657C782E4D02D700FB2704 /* sink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sink.h; sourceTree = "<group>"; };
+		F7657C792E4D02D700FB2704 /* sink_apple_audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sink_apple_audio.h; sourceTree = "<group>"; };
+		F7657C7A2E4D02D700FB2704 /* sink_sndfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sink_sndfile.h; sourceTree = "<group>"; };
+		F7657C7B2E4D02D700FB2704 /* sink_wavwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sink_wavwrite.h; sourceTree = "<group>"; };
+		F7657C7C2E4D02D700FB2704 /* source.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = source.h; sourceTree = "<group>"; };
+		F7657C7D2E4D02D700FB2704 /* source_apple_audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = source_apple_audio.h; sourceTree = "<group>"; };
+		F7657C7E2E4D02D700FB2704 /* source_avcodec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = source_avcodec.h; sourceTree = "<group>"; };
+		F7657C7F2E4D02D700FB2704 /* source_sndfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = source_sndfile.h; sourceTree = "<group>"; };
+		F7657C802E4D02D700FB2704 /* source_wavread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = source_wavread.h; sourceTree = "<group>"; };
+		F7657C822E4D02D700FB2704 /* notes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = notes.h; sourceTree = "<group>"; };
+		F7657C842E4D02D700FB2704 /* onset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = onset.h; sourceTree = "<group>"; };
+		F7657C852E4D02D700FB2704 /* peakpicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = peakpicker.h; sourceTree = "<group>"; };
+		F7657C872E4D02D700FB2704 /* pitch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitch.h; sourceTree = "<group>"; };
+		F7657C882E4D02D700FB2704 /* pitchfcomb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchfcomb.h; sourceTree = "<group>"; };
+		F7657C892E4D02D700FB2704 /* pitchmcomb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchmcomb.h; sourceTree = "<group>"; };
+		F7657C8A2E4D02D700FB2704 /* pitchschmitt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchschmitt.h; sourceTree = "<group>"; };
+		F7657C8B2E4D02D700FB2704 /* pitchspecacf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchspecacf.h; sourceTree = "<group>"; };
+		F7657C8C2E4D02D700FB2704 /* pitchyin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchyin.h; sourceTree = "<group>"; };
+		F7657C8D2E4D02D700FB2704 /* pitchyinfast.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchyinfast.h; sourceTree = "<group>"; };
+		F7657C8E2E4D02D700FB2704 /* pitchyinfft.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchyinfft.h; sourceTree = "<group>"; };
+		F7657C902E4D02D700FB2704 /* awhitening.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = awhitening.h; sourceTree = "<group>"; };
+		F7657C912E4D02D700FB2704 /* dct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dct.h; sourceTree = "<group>"; };
+		F7657C922E4D02D700FB2704 /* fft.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fft.h; sourceTree = "<group>"; };
+		F7657C932E4D02D700FB2704 /* filterbank.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filterbank.h; sourceTree = "<group>"; };
+		F7657C942E4D02D700FB2704 /* filterbank_mel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filterbank_mel.h; sourceTree = "<group>"; };
+		F7657C952E4D02D700FB2704 /* mfcc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mfcc.h; sourceTree = "<group>"; };
+		F7657C962E4D02D700FB2704 /* phasevoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = phasevoc.h; sourceTree = "<group>"; };
+		F7657C972E4D02D700FB2704 /* specdesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = specdesc.h; sourceTree = "<group>"; };
+		F7657C982E4D02D700FB2704 /* tss.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tss.h; sourceTree = "<group>"; };
+		F7657C9A2E4D02D700FB2704 /* sampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sampler.h; sourceTree = "<group>"; };
+		F7657C9B2E4D02D700FB2704 /* wavetable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wavetable.h; sourceTree = "<group>"; };
+		F7657C9D2E4D02D700FB2704 /* beattracking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = beattracking.h; sourceTree = "<group>"; };
+		F7657C9E2E4D02D700FB2704 /* tempo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tempo.h; sourceTree = "<group>"; };
+		F7657CA02E4D02D700FB2704 /* a_weighting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = a_weighting.h; sourceTree = "<group>"; };
+		F7657CA12E4D02D700FB2704 /* biquad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = biquad.h; sourceTree = "<group>"; };
+		F7657CA22E4D02D700FB2704 /* c_weighting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = c_weighting.h; sourceTree = "<group>"; };
+		F7657CA32E4D02D700FB2704 /* filter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filter.h; sourceTree = "<group>"; };
+		F7657CA42E4D02D700FB2704 /* resampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = resampler.h; sourceTree = "<group>"; };
+		F7657CA62E4D02D700FB2704 /* hist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hist.h; sourceTree = "<group>"; };
+		F7657CA72E4D02D700FB2704 /* log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		F7657CA82E4D02D700FB2704 /* parameter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parameter.h; sourceTree = "<group>"; };
+		F7657CA92E4D02D700FB2704 /* scale.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scale.h; sourceTree = "<group>"; };
+		F7657CAB2E4D02D700FB2704 /* aubio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aubio.h; sourceTree = "<group>"; };
+		F7657CAC2E4D02D700FB2704 /* cvec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cvec.h; sourceTree = "<group>"; };
+		F7657CAD2E4D02D700FB2704 /* fmat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fmat.h; sourceTree = "<group>"; };
+		F7657CAE2E4D02D700FB2704 /* fvec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fvec.h; sourceTree = "<group>"; };
+		F7657CAF2E4D02D700FB2704 /* lvec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lvec.h; sourceTree = "<group>"; };
+		F7657CB02E4D02D700FB2704 /* mathutils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mathutils.h; sourceTree = "<group>"; };
+		F7657CB12E4D02D700FB2704 /* musicutils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = musicutils.h; sourceTree = "<group>"; };
+		F7657CB22E4D02D700FB2704 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		F7657CB32E4D02D700FB2704 /* vecutils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vecutils.h; sourceTree = "<group>"; };
+		F7657CB62E4D02D700FB2704 /* libaubio.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libaubio.5.dylib; sourceTree = "<group>"; };
+		F7657CBC2E4D521100FB2704 /* SongKeyBpmAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongKeyBpmAPI.swift; sourceTree = "<group>"; };
+		F7AA00012E4C5AAA0072EC92 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
+		F8AUBIO001 /* libaubio.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libaubio.5.dylib; path = StudioBuddy/Libs/Aubio/libaubio.5.dylib; sourceTree = "<group>"; };
+		F8AUBIO002 /* StudioBuddy-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StudioBuddy-Bridging-Header.h"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8B1A1A1A1A1A1A1A1A1A1A13 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8B1A1A1A1A1A1A1A1A1A1A0D = {
+			isa = PBXGroup;
+			children = (
+				8B1A1A1A1A1A1A1A1A1A1A18 /* StudioBuddy */,
+				8B1A1A1A1A1A1A1A1A1A1A17 /* Products */,
+				F7657C752E4D016900FB2704 /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		8B1A1A1A1A1A1A1A1A1A1A17 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8B1A1A1A1A1A1A1A1A1A1A16 /* StudioBuddy.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8B1A1A1A1A1A1A1A1A1A1A18 /* StudioBuddy */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CB82E4D02D700FB2704 /* Libs */,
+				F8AUBIO002 /* StudioBuddy-Bridging-Header.h */,
+				F701DDAA2E4C54D10072EC92 /* Win95Desktop.swift */,
+				F701DDAB2E4C54D10072EC92 /* Win95Windows.swift */,
+				8B1A1A1A1A1A1A1A1A1A1A19 /* StudioBuddyApp.swift */,
+				8B1A1A1A1A1A1A1A1A1A1A1C /* ContentView.swift */,
+				8B1A1A1A1A1A1A1A1A1A1A22 /* Services */,
+				8B1A1A1A1A1A1A1A1A1A1A1E /* Assets.xcassets */,
+				8B1A1A1A1A1A1A1A1A1A1A21 /* Info.plist */,
+			);
+			path = StudioBuddy;
+			sourceTree = "<group>";
+		};
+		8B1A1A1A1A1A1A1A1A1A1A22 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CBC2E4D521100FB2704 /* SongKeyBpmAPI.swift */,
+				8B1A1A1A1A1A1A1A1A1A1A1F /* AudioManager.swift */,
+				F7AA00012E4C5AAA0072EC92 /* AudioAnalyzer.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F7657C752E4D016900FB2704 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				F8AUBIO001 /* libaubio.5.dylib */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		F7657C812E4D02D700FB2704 /* io */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C762E4D02D700FB2704 /* audio_unit.h */,
+				F7657C772E4D02D700FB2704 /* ioutils.h */,
+				F7657C782E4D02D700FB2704 /* sink.h */,
+				F7657C792E4D02D700FB2704 /* sink_apple_audio.h */,
+				F7657C7A2E4D02D700FB2704 /* sink_sndfile.h */,
+				F7657C7B2E4D02D700FB2704 /* sink_wavwrite.h */,
+				F7657C7C2E4D02D700FB2704 /* source.h */,
+				F7657C7D2E4D02D700FB2704 /* source_apple_audio.h */,
+				F7657C7E2E4D02D700FB2704 /* source_avcodec.h */,
+				F7657C7F2E4D02D700FB2704 /* source_sndfile.h */,
+				F7657C802E4D02D700FB2704 /* source_wavread.h */,
+			);
+			path = io;
+			sourceTree = "<group>";
+		};
+		F7657C832E4D02D700FB2704 /* notes */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C822E4D02D700FB2704 /* notes.h */,
+			);
+			path = notes;
+			sourceTree = "<group>";
+		};
+		F7657C862E4D02D700FB2704 /* onset */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C842E4D02D700FB2704 /* onset.h */,
+				F7657C852E4D02D700FB2704 /* peakpicker.h */,
+			);
+			path = onset;
+			sourceTree = "<group>";
+		};
+		F7657C8F2E4D02D700FB2704 /* pitch */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C872E4D02D700FB2704 /* pitch.h */,
+				F7657C882E4D02D700FB2704 /* pitchfcomb.h */,
+				F7657C892E4D02D700FB2704 /* pitchmcomb.h */,
+				F7657C8A2E4D02D700FB2704 /* pitchschmitt.h */,
+				F7657C8B2E4D02D700FB2704 /* pitchspecacf.h */,
+				F7657C8C2E4D02D700FB2704 /* pitchyin.h */,
+				F7657C8D2E4D02D700FB2704 /* pitchyinfast.h */,
+				F7657C8E2E4D02D700FB2704 /* pitchyinfft.h */,
+			);
+			path = pitch;
+			sourceTree = "<group>";
+		};
+		F7657C992E4D02D700FB2704 /* spectral */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C902E4D02D700FB2704 /* awhitening.h */,
+				F7657C912E4D02D700FB2704 /* dct.h */,
+				F7657C922E4D02D700FB2704 /* fft.h */,
+				F7657C932E4D02D700FB2704 /* filterbank.h */,
+				F7657C942E4D02D700FB2704 /* filterbank_mel.h */,
+				F7657C952E4D02D700FB2704 /* mfcc.h */,
+				F7657C962E4D02D700FB2704 /* phasevoc.h */,
+				F7657C972E4D02D700FB2704 /* specdesc.h */,
+				F7657C982E4D02D700FB2704 /* tss.h */,
+			);
+			path = spectral;
+			sourceTree = "<group>";
+		};
+		F7657C9C2E4D02D700FB2704 /* synth */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C9A2E4D02D700FB2704 /* sampler.h */,
+				F7657C9B2E4D02D700FB2704 /* wavetable.h */,
+			);
+			path = synth;
+			sourceTree = "<group>";
+		};
+		F7657C9F2E4D02D700FB2704 /* tempo */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C9D2E4D02D700FB2704 /* beattracking.h */,
+				F7657C9E2E4D02D700FB2704 /* tempo.h */,
+			);
+			path = tempo;
+			sourceTree = "<group>";
+		};
+		F7657CA52E4D02D700FB2704 /* temporal */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CA02E4D02D700FB2704 /* a_weighting.h */,
+				F7657CA12E4D02D700FB2704 /* biquad.h */,
+				F7657CA22E4D02D700FB2704 /* c_weighting.h */,
+				F7657CA32E4D02D700FB2704 /* filter.h */,
+				F7657CA42E4D02D700FB2704 /* resampler.h */,
+			);
+			path = temporal;
+			sourceTree = "<group>";
+		};
+		F7657CAA2E4D02D700FB2704 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CA62E4D02D700FB2704 /* hist.h */,
+				F7657CA72E4D02D700FB2704 /* log.h */,
+				F7657CA82E4D02D700FB2704 /* parameter.h */,
+				F7657CA92E4D02D700FB2704 /* scale.h */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
+		F7657CB42E4D02D700FB2704 /* aubio */ = {
+			isa = PBXGroup;
+			children = (
+				F7657C812E4D02D700FB2704 /* io */,
+				F7657C832E4D02D700FB2704 /* notes */,
+				F7657C862E4D02D700FB2704 /* onset */,
+				F7657C8F2E4D02D700FB2704 /* pitch */,
+				F7657C992E4D02D700FB2704 /* spectral */,
+				F7657C9C2E4D02D700FB2704 /* synth */,
+				F7657C9F2E4D02D700FB2704 /* tempo */,
+				F7657CA52E4D02D700FB2704 /* temporal */,
+				F7657CAA2E4D02D700FB2704 /* utils */,
+				F7657CAB2E4D02D700FB2704 /* aubio.h */,
+				F7657CAC2E4D02D700FB2704 /* cvec.h */,
+				F7657CAD2E4D02D700FB2704 /* fmat.h */,
+				F7657CAE2E4D02D700FB2704 /* fvec.h */,
+				F7657CAF2E4D02D700FB2704 /* lvec.h */,
+				F7657CB02E4D02D700FB2704 /* mathutils.h */,
+				F7657CB12E4D02D700FB2704 /* musicutils.h */,
+				F7657CB22E4D02D700FB2704 /* types.h */,
+				F7657CB32E4D02D700FB2704 /* vecutils.h */,
+			);
+			path = aubio;
+			sourceTree = "<group>";
+		};
+		F7657CB52E4D02D700FB2704 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CB42E4D02D700FB2704 /* aubio */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		F7657CB72E4D02D700FB2704 /* Aubio */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CB52E4D02D700FB2704 /* include */,
+				F7657CB62E4D02D700FB2704 /* libaubio.5.dylib */,
+			);
+			path = Aubio;
+			sourceTree = "<group>";
+		};
+		F7657CB82E4D02D700FB2704 /* Libs */ = {
+			isa = PBXGroup;
+			children = (
+				F7657CB72E4D02D700FB2704 /* Aubio */,
+			);
+			path = Libs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8B1A1A1A1A1A1A1A1A1A1A15 /* StudioBuddy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8B1A1A1A1A1A1A1A1A1A1A24 /* Build configuration list for PBXNativeTarget "StudioBuddy" */;
+			buildPhases = (
+				8B1A1A1A1A1A1A1A1A1A1A12 /* Sources */,
+				8B1A1A1A1A1A1A1A1A1A1A13 /* Frameworks */,
+				8B1A1A1A1A1A1A1A1A1A1A14 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StudioBuddy;
+			productName = StudioBuddy;
+			productReference = 8B1A1A1A1A1A1A1A1A1A1A16 /* StudioBuddy.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8B1A1A1A1A1A1A1A1A1A1A0E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					8B1A1A1A1A1A1A1A1A1A1A15 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 8B1A1A1A1A1A1A1A1A1A1A11 /* Build configuration list for PBXProject "StudioBuddy" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8B1A1A1A1A1A1A1A1A1A1A0D;
+			productRefGroup = 8B1A1A1A1A1A1A1A1A1A1A17 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8B1A1A1A1A1A1A1A1A1A1A15 /* StudioBuddy */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8B1A1A1A1A1A1A1A1A1A1A14 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B1A1A1A1A1A1A1A1A1A1A1D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8B1A1A1A1A1A1A1A1A1A1A12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F701DDAC2E4C54D10072EC92 /* Win95Desktop.swift in Sources */,
+				F7657CBD2E4D521100FB2704 /* SongKeyBpmAPI.swift in Sources */,
+				F701DDAD2E4C54D10072EC92 /* Win95Windows.swift in Sources */,
+				8B1A1A1A1A1A1A1A1A1A1A1B /* ContentView.swift in Sources */,
+				8B1A1A1A1A1A1A1A1A1A1A20 /* AudioManager.swift in Sources */,
+				8B1A1A1A1A1A1A1A1A1A1A1A /* StudioBuddyApp.swift in Sources */,
+				F7AA00022E4C5AAA0072EC92 /* AudioAnalyzer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		8B1A1A1A1A1A1A1A1A1A1A23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = P2WX9D4GH9;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8B1A1A1A1A1A1A1A1A1A1A25 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = P2WX9D4GH9;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8B1A1A1A1A1A1A1A1A1A1A26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/StudioBuddy/Libs/Aubio/include",
+				);
+				INFOPLIST_FILE = StudioBuddy/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "StudioBuddy needs access to your microphone to record audio for mastering.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../StudioBuddy/Libs/Aubio",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/StudioBuddy/Libs/Aubio",
+					"$(PROJECT_DIR)/StudioBuddy/Libs/Aubio",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.StudioBuddy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "StudioBuddy/StudioBuddy-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8B1A1A1A1A1A1A1A1A1A1A27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/StudioBuddy/Libs/Aubio/include",
+				);
+				INFOPLIST_FILE = StudioBuddy/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "StudioBuddy needs access to your microphone to record audio for mastering.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../StudioBuddy/Libs/Aubio",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/StudioBuddy/Libs/Aubio",
+					"$(PROJECT_DIR)/StudioBuddy/Libs/Aubio",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.StudioBuddy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "StudioBuddy/StudioBuddy-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8B1A1A1A1A1A1A1A1A1A1A11 /* Build configuration list for PBXProject "StudioBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8B1A1A1A1A1A1A1A1A1A1A23 /* Debug */,
+				8B1A1A1A1A1A1A1A1A1A1A25 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8B1A1A1A1A1A1A1A1A1A1A24 /* Build configuration list for PBXNativeTarget "StudioBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8B1A1A1A1A1A1A1A1A1A1A26 /* Debug */,
+				8B1A1A1A1A1A1A1A1A1A1A27 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8B1A1A1A1A1A1A1A1A1A1A0E /* Project object */;
+}

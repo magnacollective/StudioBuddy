@@ -11,9 +11,30 @@ import subprocess
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
-# Manual CORS middleware to ensure it always works
+# Add standard CORS middleware first
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Manual CORS middleware as backup
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
+    # Handle preflight requests immediately
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "86400",
+            }
+        )
+    
     response = await call_next(request)
     
     # Add CORS headers to every response
@@ -24,21 +45,9 @@ async def cors_handler(request: Request, call_next):
     
     return response
 
-# Handle preflight OPTIONS requests
-@app.options("/{full_path:path}")
-async def preflight_handler(full_path: str):
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
-
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "2.0"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "3.0", "cors": "manual-middleware", "timestamp": "2024-08-14-17:30"}
 
 @app.get("/test")
 def test():

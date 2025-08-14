@@ -11,10 +11,14 @@ import subprocess
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
+# Get allowed origins from environment variable
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+print(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
+
 # Add standard CORS middleware first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +51,7 @@ async def cors_handler(request: Request, call_next):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "4.0", "cors": "double-middleware", "timestamp": "2024-08-14-18:00"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.0", "cors": "env-origins", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-18:15"}
 
 @app.get("/test")
 def test():

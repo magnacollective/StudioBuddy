@@ -87,7 +87,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.3", "cors": "exception-handlers", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-19:00"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.4", "cors": "fixed-file-response", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-19:30"}
 
 @app.get("/test")
 def test():
@@ -177,14 +177,26 @@ async def master_audio(
             mg.log(print)
             mg.process(target=t_wav, reference=r_wav, results=[mg.pcm16(output_path)])
 
+            # Check if file exists after processing
             if not os.path.exists(output_path):
+                print(f"[MASTER] ERROR: Output file not found at {output_path}")
                 raise HTTPException(status_code=500, detail="Mastering failed: output not created")
-
-            # Return file (CORS headers added by middleware)
-            return FileResponse(
-                output_path,
+            
+            print(f"[MASTER] Returning mastered file from {output_path}")
+            print(f"[MASTER] File size: {os.path.getsize(output_path)} bytes")
+            
+            # Read file content and return as Response instead of FileResponse
+            # This avoids issues with temporary directory cleanup
+            with open(output_path, "rb") as f:
+                content = f.read()
+            
+            return Response(
+                content=content,
                 media_type="audio/wav",
-                filename="mastered.wav",
+                headers={
+                    "Content-Disposition": "attachment; filename=mastered.wav",
+                    "Content-Length": str(len(content))
+                }
             )
         except Exception as e:
             print(f"[ERROR] Mastering failed: {e}")

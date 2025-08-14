@@ -16,9 +16,22 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Temporarily allow all origins
     allow_credentials=False,  # Must be False when allow_origins=["*"]
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# Additional CORS handling for preflight requests
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return JSONResponse(
+        content="OK",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 @app.get("/")
 def root():
@@ -78,12 +91,14 @@ async def master_audio(
             if not os.path.exists(output_path):
                 raise HTTPException(status_code=500, detail="Mastering failed: output not created")
 
-            # Return file
-            return FileResponse(
+            # Return file with CORS headers
+            response = FileResponse(
                 output_path,
                 media_type="audio/wav",
                 filename="mastered.wav",
             )
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            return response
         except Exception as e:
             print(f"[ERROR] Mastering failed: {e}")
             import traceback

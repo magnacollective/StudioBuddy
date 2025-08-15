@@ -15,7 +15,7 @@ import librosa
 app = FastAPI(title="StudioBuddy Matchering API")
 
 # Get allowed origins from environment variable
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "https://www.studiobuddy.xyz,https://studiobuddy.xyz,https://studio-buddy-web.vercel.app,http://localhost:3000").split(",")
 ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS]  # Clean whitespace
 print(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
 

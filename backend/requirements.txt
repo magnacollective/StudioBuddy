@@ -3,3 +3,7 @@ uvicorn[standard]==0.30.6
 python-multipart==0.0.9
 # Install heavy deps first to prime Docker layer cache and speed cold-start import
 matchering==2.0.6
+# Audio processing dependencies for volume control
+librosa==0.10.1
+soundfile==0.12.1
+numpy==1.24.3

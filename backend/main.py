@@ -9,6 +9,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
 import subprocess
+import numpy as np
+import librosa
 
 app = FastAPI(title="StudioBuddy Matchering API")
 
@@ -118,6 +120,8 @@ async def master_audio(
     request: Request,
     audio: UploadFile = File(...),
     reference: UploadFile = File(None),
+    target_lufs: float = Query(-14.0, description="Target LUFS for output level"),
+    max_peak: float = Query(-1.0, description="Maximum peak level in dB"),
 ):
     print(f"[MASTER] Received request: audio={audio.filename}, reference={reference.filename if reference else None}")
     print(f"[MASTER] Request headers: {dict(request.headers)}")
@@ -185,6 +189,10 @@ async def master_audio(
             if not os.path.exists(output_path):
                 print(f"[MASTER] ERROR: Output file not found at {output_path}")
                 raise HTTPException(status_code=500, detail="Mastering failed: output not created")
+            
+            # Apply volume control and clipping prevention
+            print(f"[MASTER] Applying volume control (target LUFS: {target_lufs}, max peak: {max_peak})")
+            output_path = _apply_volume_control(output_path, tmpdir, target_lufs, max_peak)
             
             print(f"[MASTER] Returning mastered file from {output_path}")
             print(f"[MASTER] File size: {os.path.getsize(output_path)} bytes")
@@ -365,6 +373,85 @@ def _to_wav(input_path: str, workdir: str) -> str:
         raise HTTPException(status_code=400, detail="Audio conversion produced empty file")
     
     return output_path
+
+
+def _apply_volume_control(input_path: str, workdir: str, target_lufs: float = -14.0, max_peak: float = -1.0) -> str:
+    """Apply volume control and clipping prevention to mastered audio."""
+    print(f"[_apply_volume_control] Processing {input_path}")
+    
+    try:
+        # Load audio using librosa
+        audio, sr = librosa.load(input_path, sr=None, mono=False)
+        
+        # Ensure stereo format
+        if audio.ndim == 1:
+            audio = np.stack([audio, audio])
+        elif audio.shape[0] > 2:
+            audio = audio[:2]  # Take only first 2 channels
+        
+        # Calculate current peak level
+        current_peak = np.max(np.abs(audio))
+        current_peak_db = 20 * np.log10(current_peak) if current_peak > 0 else -np.inf
+        
+        print(f"[_apply_volume_control] Current peak: {current_peak_db:.2f} dB")
+        
+        # Calculate LUFS using simple RMS approximation
+        rms = np.sqrt(np.mean(audio**2))
+        current_lufs_approx = 20 * np.log10(rms) - 0.691 if rms > 0 else -np.inf
+        
+        print(f"[_apply_volume_control] Estimated current LUFS: {current_lufs_approx:.2f}")
+        
+        # Calculate gain adjustment for LUFS target
+        lufs_gain_db = target_lufs - current_lufs_approx
+        
+        # Calculate gain adjustment for peak limiting
+        peak_gain_db = max_peak - current_peak_db
+        
+        # Use the more restrictive gain (smaller value)
+        final_gain_db = min(lufs_gain_db, peak_gain_db)
+        
+        # Limit gain adjustment to reasonable range
+        final_gain_db = np.clip(final_gain_db, -20, 6)
+        
+        print(f"[_apply_volume_control] Applying gain: {final_gain_db:.2f} dB")
+        
+        # Apply gain
+        gain_linear = 10**(final_gain_db / 20)
+        audio_adjusted = audio * gain_linear
+        
+        # Apply soft limiting to prevent clipping
+        audio_limited = _soft_limit(audio_adjusted, threshold=0.95)
+        
+        # Verify final peak level
+        final_peak = np.max(np.abs(audio_limited))
+        final_peak_db = 20 * np.log10(final_peak) if final_peak > 0 else -np.inf
+        
+        print(f"[_apply_volume_control] Final peak: {final_peak_db:.2f} dB")
+        
+        # Save processed audio
+        output_path = os.path.join(workdir, "mastered_controlled.wav")
+        
+        # Convert back to int16 and save using scipy
+        import soundfile as sf
+        audio_int16 = (audio_limited * 32767).astype(np.int16)
+        sf.write(output_path, audio_int16.T, sr, subtype='PCM_16')
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"[_apply_volume_control] Error: {e}")
+        # Return original path if processing fails
+        return input_path
+
+
+def _soft_limit(audio: np.ndarray, threshold: float = 0.95) -> np.ndarray:
+    """Apply soft limiting to prevent clipping."""
+    # Simple tanh-based soft limiter
+    mask = np.abs(audio) > threshold
+    limited = np.where(mask, 
+                      np.sign(audio) * (threshold + (1 - threshold) * np.tanh((np.abs(audio) - threshold) / (1 - threshold))),
+                      audio)
+    return limited
 
 
 @app.post("/analyze")

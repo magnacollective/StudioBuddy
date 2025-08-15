@@ -16,7 +16,20 @@ app = FastAPI(title="StudioBuddy Matchering API")
 
 # Get allowed origins from environment variable
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS]  # Clean whitespace
 print(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
+
+def get_cors_origin(request_origin: str) -> str:
+    """Get the appropriate CORS origin header value based on request origin."""
+    if "*" in ALLOWED_ORIGINS:
+        return "*"
+    
+    # Check if request origin is in allowed list
+    if request_origin in ALLOWED_ORIGINS:
+        return request_origin
+    
+    # Fallback to first allowed origin or *
+    return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
 
 # Add standard CORS middleware first
 app.add_middleware(
@@ -30,12 +43,15 @@ app.add_middleware(
 # Manual CORS middleware as backup
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
+    request_origin = request.headers.get("origin", "")
+    cors_origin = get_cors_origin(request_origin)
+    
     # Handle preflight requests immediately
     if request.method == "OPTIONS":
         return Response(
             status_code=200,
             headers={
-                "Access-Control-Allow-Origin": "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS),
+                "Access-Control-Allow-Origin": cors_origin,
                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
                 "Access-Control-Allow-Headers": "*",
                 "Access-Control-Max-Age": "86400",
@@ -45,7 +61,7 @@ async def cors_handler(request: Request, call_next):
     response = await call_next(request)
     
     # Add CORS headers to every response
-    response.headers["Access-Control-Allow-Origin"] = "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS)
+    response.headers["Access-Control-Allow-Origin"] = cors_origin
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Access-Control-Expose-Headers"] = "*"
@@ -56,8 +72,11 @@ async def cors_handler(request: Request, call_next):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Custom exception handler that ensures CORS headers are always included"""
+    request_origin = request.headers.get("origin", "")
+    cors_origin = get_cors_origin(request_origin)
+    
     headers = {
-        "Access-Control-Allow-Origin": "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS),
+        "Access-Control-Allow-Origin": cors_origin,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Expose-Headers": "*",
@@ -75,8 +94,11 @@ async def general_exception_handler(request: Request, exc: Exception):
     import traceback
     traceback.print_exc()
     
+    request_origin = request.headers.get("origin", "")
+    cors_origin = get_cors_origin(request_origin)
+    
     headers = {
-        "Access-Control-Allow-Origin": "*" if "*" in ALLOWED_ORIGINS else ",".join(ALLOWED_ORIGINS),
+        "Access-Control-Allow-Origin": cors_origin,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Expose-Headers": "*",
@@ -89,7 +111,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.4", "cors": "fixed-file-response", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-14-19:30"}
+    return {"status": "ok", "service": "studiobuddy-mastering", "version": "5.5", "cors": "single-origin-fix", "allowed_origins": ALLOWED_ORIGINS, "timestamp": "2024-08-15"}
 
 @app.get("/test")
 def test():

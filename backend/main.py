@@ -467,12 +467,14 @@ def _apply_volume_control(input_path: str, workdir: str, target_lufs: float = -1
 
 
 def _soft_limit(audio: np.ndarray, threshold: float = 0.95) -> np.ndarray:
-    """Apply soft limiting to prevent clipping."""
-    # Simple tanh-based soft limiter
+    """Apply soft limiting to prevent clipping - reduced to half strength."""
+    # Simple tanh-based soft limiter with reduced strength (50% mix with original)
     mask = np.abs(audio) > threshold
-    limited = np.where(mask, 
-                      np.sign(audio) * (threshold + (1 - threshold) * np.tanh((np.abs(audio) - threshold) / (1 - threshold))),
-                      audio)
+    fully_limited = np.where(mask, 
+                            np.sign(audio) * (threshold + (1 - threshold) * np.tanh((np.abs(audio) - threshold) / (1 - threshold))),
+                            audio)
+    # Mix 50% of limited signal with 50% of original to reduce limiting strength
+    limited = np.where(mask, 0.5 * audio + 0.5 * fully_limited, audio)
     return limited
 
 
